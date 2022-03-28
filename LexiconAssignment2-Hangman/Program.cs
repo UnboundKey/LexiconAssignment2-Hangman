@@ -1,38 +1,43 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace LexiconAssignment2_Hangman
 {
     // ReSharper disable once ClassNeverInstantiated.Global
+    [SuppressMessage("ReSharper", "SuggestVarOrType_BuiltInTypes")]
     public class Program
     {
-        private static readonly string[] Wordlist = {"same", "annanas",};
+        private static readonly string[] Wordlist = {"same", "antennas"};
         private static string _pickedWord;
         private static StringBuilder _wrongLettersBuilder = new StringBuilder();
         private static char[] _correctChars;
-        private static bool IsWon = false;
+        private int maxAttempts;
+        private int currentAtempt;
 
-        static void Main(string[] args)
+        static void Main()
         {
             _pickedWord = PickWord(Wordlist);
             _correctChars = FillCharArray(_pickedWord);
 
             Console.WriteLine("I've picked a word, now try to guess it");
-            while (!IsWon)
+            while (true)
             {
                 PrintCurrentLetters();
                 var input = Console.ReadLine();
                 ModeSelect(input);
-                IsWon = CheckWin();
+                //TODO Set up Win Screen
+                //Todo Limit amount of attempts
+                //TODO set up a lose condition
             }
         }
 
-        public static void ModeSelect(string input)
+        private static void ModeSelect(string input)
         {
             if (input != null && input.Length > 1)
             {
-                WholeWordGuess(input);
+                WholeWordGuess(input, _pickedWord,_correctChars);
             }
             else if (input != null && input.Length == 1)
             {
@@ -40,14 +45,12 @@ namespace LexiconAssignment2_Hangman
             }
         }
 
-        private static bool CheckWin()
+        public static string PickWord(string[] wordStrings)
         {
-            if (new string(_correctChars) == _pickedWord)
-            {
-                return true;
-            }
-
-            return false;
+            Random r = new Random();
+            int randSelection = r.Next(0, wordStrings.Length);
+            _pickedWord = wordStrings[randSelection];
+            return _pickedWord;
         }
 
         public static char[] FillCharArray(string pickedWord)
@@ -61,11 +64,23 @@ namespace LexiconAssignment2_Hangman
             return outputArray;
         }
 
+        public static bool CheckWin()
+        {
+            if (new string(_correctChars) == _pickedWord)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        
         public static void SingleCharacterGuess(string input, string pickedword, char[] correctChars, StringBuilder sb)
         {
             // this is a very hacky way of doing it but it works
             string correctCharsBeforeCheck = new string(correctChars);
-            if (CheckRepeatInput(input, correctChars, sb)) return;
+
+            if (DetectRepeatInput(input, correctChars, sb)) return;
+
             for (int index = 0; index < pickedword.Length; index++)
             {
                 char letter = pickedword[index];
@@ -82,7 +97,21 @@ namespace LexiconAssignment2_Hangman
             }
         }
 
-        public static bool CheckRepeatInput(string input, char[] correctChars, StringBuilder sb)
+        public static void WholeWordGuess(string input, string pickedWord, char[] correctChars)
+        {
+            if (input == pickedWord)
+            {
+                correctChars = input.ToCharArray();
+            }
+        }
+
+        private static void PrintCurrentLetters()
+        {
+            Console.WriteLine(_correctChars);
+            Console.WriteLine($"Wrong Letters {_wrongLettersBuilder}");
+        }
+
+        public static bool DetectRepeatInput(string input, char[] correctChars, StringBuilder sb)
         {
             if (correctChars.Contains(input[0]) || sb.ToString().Contains(input[0]))
             {
@@ -91,28 +120,6 @@ namespace LexiconAssignment2_Hangman
             }
 
             return false;
-        }
-
-        private static void WholeWordGuess(string input)
-        {
-            if (input == _pickedWord)
-            {
-                _correctChars = input.ToCharArray();
-            }
-        }
-
-        private static void PrintCurrentLetters()
-        {
-            Console.WriteLine(_correctChars);
-            Console.WriteLine("Wrong Letters: {0}", _wrongLettersBuilder);
-        }
-
-        public static string PickWord(string[] wordStrings)
-        {
-            Random r = new Random();
-            int randSelection = r.Next(0, wordStrings.Length);
-            _pickedWord = wordStrings[randSelection];
-            return _pickedWord;
         }
     }
 }

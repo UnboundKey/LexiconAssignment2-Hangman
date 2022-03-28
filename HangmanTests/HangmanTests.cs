@@ -25,7 +25,7 @@ namespace HangmanTests
             StringBuilder sb = new StringBuilder();
             Program.SingleCharacterGuess("n", word, correctArray,sb);
             Program.SingleCharacterGuess("n", word, correctArray,sb);
-            Assert.Equal(true,Program.CheckRepeatInput("n",correctArray,sb));
+            Assert.True(Program.DetectRepeatInput("n",correctArray,sb));
             Assert.Empty(sb.ToString());
         }
         
@@ -36,7 +36,7 @@ namespace HangmanTests
             char[] correctArray = Program.FillCharArray(word);
             StringBuilder sb = new StringBuilder();
             Program.SingleCharacterGuess("n", word, correctArray,sb);
-            Assert.Equal(false,Program.CheckRepeatInput("a",correctArray,sb));
+            Assert.Equal(false,Program.DetectRepeatInput("a",correctArray,sb));
             Assert.Empty(sb.ToString());
         }
         
