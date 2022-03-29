@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace LexiconAssignment2_Hangman
 {
@@ -9,35 +10,65 @@ namespace LexiconAssignment2_Hangman
     [SuppressMessage("ReSharper", "SuggestVarOrType_BuiltInTypes")]
     public class Program
     {
-        private static readonly string[] Wordlist = {"same", "antennas"};
+        private static string[] _wordlist = {"word","sponge"};
         private static string _pickedWord;
         private static StringBuilder _wrongLettersBuilder = new StringBuilder();
         private static char[] _correctChars;
-        private static readonly int maxAtempts = 2;
+        private static readonly int maxAtempts = 10;
         private static int _currentAttempt;
 
         static void Main()
         {
-            _pickedWord = PickWord(Wordlist);
+            _wordlist = LoadWordlistFromFile("wordlist.txt", _wordlist);
+            _pickedWord = PickWord(_wordlist).ToUpper();
             _correctChars = FillCharArray(_pickedWord);
 
             Console.WriteLine("I've picked a word, now try to guess it");
             while ((_currentAttempt < maxAtempts) ^ CheckWin())
             {
                 PrintCurrentLetters();
-                var input = Console.ReadLine();
+                var input = Console.ReadLine()?.ToUpper();
                 ModeSelect(input);
             }
 
             if (CheckWin())
             {
                 Console.WriteLine($"Congrats, the word was \"{_pickedWord}\", you won");
+                Console.WriteLine("press any key to exit");
+                Console.ReadKey();
+                
             } else if (_currentAttempt >= maxAtempts)
             {
-                Console.WriteLine("Sorry, you lost the game ;)");
+                Console.WriteLine($"Sorry, you lost the game ;). the word was: {_pickedWord}");
+                Console.WriteLine("press any key to exit");
+                Console.ReadKey();
             }
         }
-        
+
+        public static string[] LoadWordlistFromFile(string filenamePath, string[] wordlist)
+        {
+            string fullPath = $"{Environment.CurrentDirectory}/{filenamePath}";
+            try
+            {
+                Console.WriteLine($"Loading wordlist from {fullPath}");
+                wordlist = File.ReadAllLines(fullPath)[0].Split(',');
+                Console.WriteLine($"Load Successful");
+                return wordlist;
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                Console.WriteLine($"Folder containing directory not found");
+                return wordlist;
+            }
+            catch (FileNotFoundException e)
+            {
+                Console.WriteLine($"File not Found, Falling back on internal wordlist");
+                return wordlist;
+            }
+
+
+        }
+
         private static void ModeSelect(string input)
         {
             if (input != null && input.Length > 1)
@@ -114,7 +145,8 @@ namespace LexiconAssignment2_Hangman
         private static void PrintCurrentLetters()
         {
             Console.WriteLine(_correctChars);
-            Console.WriteLine($"Wrong Letters: {_wrongLettersBuilder} {_currentAttempt} : {maxAtempts}");
+            Console.WriteLine($"Wrong Letters: {_wrongLettersBuilder}");
+            Console.WriteLine($"Attempts {_currentAttempt} : {maxAtempts}");
         }
 
         public static bool DetectRepeatInput(string input, char[] correctChars, StringBuilder sb)

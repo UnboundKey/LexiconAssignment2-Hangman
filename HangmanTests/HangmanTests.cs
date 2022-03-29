@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Text;
 using Xunit;
 using LexiconAssignment2_Hangman;
@@ -36,7 +38,7 @@ namespace HangmanTests
             char[] correctArray = Program.FillCharArray(word);
             StringBuilder sb = new StringBuilder();
             Program.SingleCharacterGuess("n", word, correctArray,sb);
-            Assert.Equal(false,Program.DetectRepeatInput("a",correctArray,sb));
+            Assert.False(Program.DetectRepeatInput("a",correctArray,sb));
             Assert.Empty(sb.ToString());
         }
         
@@ -46,6 +48,14 @@ namespace HangmanTests
             string[] words = {"test"};
             var pickWord = Program.PickWord(words);
             Assert.Equal(words[0],pickWord);
+        }
+
+        [Fact]
+        public void LoadWordList_fileDoesNotExist()
+        {
+            string[] output = { };
+            Program.LoadWordlistFromFile("file.txt", output);
+            Assert.Throws<FileNotFoundException>(() => Program.LoadWordlistFromFile("file.txt", output));
         }
     }
 }
