@@ -13,8 +13,8 @@ namespace LexiconAssignment2_Hangman
         private static string _pickedWord;
         private static StringBuilder _wrongLettersBuilder = new StringBuilder();
         private static char[] _correctChars;
-        private int maxAttempts;
-        private int currentAtempt;
+        private static readonly int maxAtempts = 2;
+        private static int _currentAttempt;
 
         static void Main()
         {
@@ -22,22 +22,27 @@ namespace LexiconAssignment2_Hangman
             _correctChars = FillCharArray(_pickedWord);
 
             Console.WriteLine("I've picked a word, now try to guess it");
-            while (true)
+            while ((_currentAttempt < maxAtempts) ^ CheckWin())
             {
                 PrintCurrentLetters();
                 var input = Console.ReadLine();
                 ModeSelect(input);
-                //TODO Set up Win Screen
-                //Todo Limit amount of attempts
-                //TODO set up a lose condition
+            }
+
+            if (CheckWin())
+            {
+                Console.WriteLine($"Congrats, the word was \"{_pickedWord}\", you won");
+            } else if (_currentAttempt >= maxAtempts)
+            {
+                Console.WriteLine("Sorry, you lost the game ;)");
             }
         }
-
+        
         private static void ModeSelect(string input)
         {
             if (input != null && input.Length > 1)
             {
-                WholeWordGuess(input, _pickedWord,_correctChars);
+                WholeWordGuess(input, _pickedWord);
             }
             else if (input != null && input.Length == 1)
             {
@@ -74,16 +79,16 @@ namespace LexiconAssignment2_Hangman
             return false;
         }
         
-        public static void SingleCharacterGuess(string input, string pickedword, char[] correctChars, StringBuilder sb)
+        public static void SingleCharacterGuess(string input, string pickedWord, char[] correctChars, StringBuilder sb)
         {
             // this is a very hacky way of doing it but it works
             string correctCharsBeforeCheck = new string(correctChars);
 
             if (DetectRepeatInput(input, correctChars, sb)) return;
 
-            for (int index = 0; index < pickedword.Length; index++)
+            for (int index = 0; index < pickedWord.Length; index++)
             {
-                char letter = pickedword[index];
+                char letter = pickedWord[index];
                 if (input[0] == letter)
                 {
                     correctChars[index] = letter;
@@ -94,21 +99,22 @@ namespace LexiconAssignment2_Hangman
             if (correctCharsBeforeCheck == new string(correctChars))
             {
                 sb.Append(input);
+                _currentAttempt++;
             }
         }
 
-        public static void WholeWordGuess(string input, string pickedWord, char[] correctChars)
+        public static void WholeWordGuess(string input, string pickedWord)
         {
             if (input == pickedWord)
             {
-                correctChars = input.ToCharArray();
+                _correctChars = input.ToCharArray();
             }
         }
 
         private static void PrintCurrentLetters()
         {
             Console.WriteLine(_correctChars);
-            Console.WriteLine($"Wrong Letters {_wrongLettersBuilder}");
+            Console.WriteLine($"Wrong Letters: {_wrongLettersBuilder} {_currentAttempt} : {maxAtempts}");
         }
 
         public static bool DetectRepeatInput(string input, char[] correctChars, StringBuilder sb)
