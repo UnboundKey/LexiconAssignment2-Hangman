@@ -10,7 +10,7 @@ namespace LexiconAssignment2_Hangman
     [SuppressMessage("ReSharper", "SuggestVarOrType_BuiltInTypes")]
     public class Program
     {
-        private static string[] _wordlist = {"word","sponge"};
+        private static string[] _wordlist = {"word","sponge","human","death","borrow","cheat","supercalifragilisticexpialidocious"};
         private static string _pickedWord;
         private static StringBuilder _wrongLettersBuilder = new StringBuilder();
         private static char[] _correctChars;
@@ -51,16 +51,27 @@ namespace LexiconAssignment2_Hangman
             try
             {
                 Console.WriteLine($"Loading wordlist from {fullPath}");
-                wordlist = File.ReadAllLines(fullPath)[0].Split(',');
-                Console.WriteLine($"Load Successful");
+                string fileContents = File.ReadAllText(fullPath);
+                bool hasNewLines = fileContents.Contains("\n");
+                if (fileContents.Contains(','))
+                {
+                    wordlist = fileContents.Split(',');
+                }
+                else if (hasNewLines)
+                {
+                    wordlist = fileContents.Split('\n');
+                }
+
+                // wordlist = File.ReadAllLines(fullPath)[0].Split(',');
+                Console.WriteLine($"Loaded {wordlist.Length} words Successfully");
                 return wordlist;
             }
-            catch (DirectoryNotFoundException e)
+            catch (DirectoryNotFoundException)
             {
-                Console.WriteLine($"Folder containing directory not found");
+                Console.WriteLine($"Directory not found");
                 return wordlist;
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 Console.WriteLine($"File not Found, Falling back on internal wordlist");
                 return wordlist;
