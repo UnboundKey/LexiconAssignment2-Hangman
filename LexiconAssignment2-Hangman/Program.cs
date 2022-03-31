@@ -22,8 +22,14 @@ namespace LexiconAssignment2_Hangman
         private static int _currentAttempt;
 
         private static string _defaultWordlistPath = "wordlist.txt";
-        static void Main()
+        static void Main(string[] args)
         {
+
+            if (args.Length > 0)
+            { 
+                _defaultWordlistPath = args[0];
+            }
+            
             //Set Up
             _wordlist = LoadWordlistFromFile(_wordlist,_defaultWordlistPath);
             _pickedWord = PickWord(_wordlist).ToUpper();
@@ -156,7 +162,6 @@ namespace LexiconAssignment2_Hangman
                 return stringArray;
             }
         }
-
         
         public static char[] FillCharArray(string pickedWord)
         {
