@@ -49,13 +49,5 @@ namespace HangmanTests
             var pickWord = Program.PickWord(words);
             Assert.Equal(words[0],pickWord);
         }
-
-        [Fact]
-        public void LoadWordList_fileDoesNotExist()
-        {
-            string[] output = { };
-            Program.LoadWordlistFromFile("file.txt", output);
-            Assert.Throws<FileNotFoundException>(() => Program.LoadWordlistFromFile("file.txt", output));
-        }
     }
 }

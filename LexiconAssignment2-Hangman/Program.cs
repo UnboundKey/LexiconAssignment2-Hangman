@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.IO;
 
 namespace LexiconAssignment2_Hangman
 {
@@ -14,19 +14,20 @@ namespace LexiconAssignment2_Hangman
         private static string _pickedWord;
         private static StringBuilder _wrongLettersBuilder = new StringBuilder();
         private static char[] _correctChars;
-        private static readonly int maxAtempts = 10;
+        private static readonly int MaxAttempts = 10;
         private static int _currentAttempt;
 
         static void Main()
         {
-            _wordlist = LoadWordlistFromFile("wordlist.txt", _wordlist);
+            // _wordlist = LoadWordlistFromFile("wordlist.txt", _wordlist);
+            _wordlist =  new string[]{"word"};
             _pickedWord = PickWord(_wordlist).ToUpper();
             _correctChars = FillCharArray(_pickedWord);
 
             Console.WriteLine("I've picked a word, now try to guess it");
-            while ((_currentAttempt < maxAtempts) ^ CheckWin())
+            while ((_currentAttempt < MaxAttempts) ^ CheckWin())
             {
-                PrintCurrentLetters();
+                PrintCurrentStatus(_correctChars,_wrongLettersBuilder,_currentAttempt,MaxAttempts);
                 var input = Console.ReadLine()?.ToUpper();
                 ModeSelect(input);
             }
@@ -37,7 +38,7 @@ namespace LexiconAssignment2_Hangman
                 Console.WriteLine("press any key to exit");
                 Console.ReadKey();
                 
-            } else if (_currentAttempt >= maxAtempts)
+            } else if (_currentAttempt >= MaxAttempts)
             {
                 Console.WriteLine($"Sorry, you lost the game ;). the word was: {_pickedWord}");
                 Console.WriteLine("press any key to exit");
@@ -68,12 +69,12 @@ namespace LexiconAssignment2_Hangman
             }
             catch (DirectoryNotFoundException)
             {
-                Console.WriteLine($"Directory not found");
+                Console.WriteLine("Directory not found");
                 return wordlist;
             }
             catch (FileNotFoundException)
             {
-                Console.WriteLine($"File not Found, Falling back on internal wordlist");
+                Console.WriteLine("File not Found, Falling back on internal wordlist");
                 return wordlist;
             }
 
@@ -84,7 +85,7 @@ namespace LexiconAssignment2_Hangman
         {
             if (input != null && input.Length > 1)
             {
-                WholeWordGuess(input, _pickedWord);
+                WholeWordGuess(input, _pickedWord, ref _correctChars);
             }
             else if (input != null && input.Length == 1)
             {
@@ -111,7 +112,7 @@ namespace LexiconAssignment2_Hangman
             return outputArray;
         }
 
-        public static bool CheckWin()
+        private static bool CheckWin()
         {
             if (new string(_correctChars) == _pickedWord)
             {
@@ -121,43 +122,46 @@ namespace LexiconAssignment2_Hangman
             return false;
         }
         
-        public static void SingleCharacterGuess(string input, string pickedWord, char[] correctChars, StringBuilder sb)
+        public static void SingleCharacterGuess(string input, string pickedWord, char[] correctCharsArray, StringBuilder sb)
         {
             // this is a very hacky way of doing it but it works
-            string correctCharsBeforeCheck = new string(correctChars);
+            string correctCharsBeforeCheck = new string(correctCharsArray);
 
-            if (DetectRepeatInput(input, correctChars, sb)) return;
+            if (DetectRepeatInput(input, correctCharsArray, sb)) return;
 
             for (int index = 0; index < pickedWord.Length; index++)
             {
                 char letter = pickedWord[index];
                 if (input[0] == letter)
                 {
-                    correctChars[index] = letter;
+                    correctCharsArray[index] = letter;
                 }
             }
 
             // if the string hasn't been updated then you've got a wrong letter. There fore append it
-            if (correctCharsBeforeCheck == new string(correctChars))
+            if (correctCharsBeforeCheck == new string(correctCharsArray))
             {
                 sb.Append(input);
                 _currentAttempt++;
             }
         }
 
-        public static void WholeWordGuess(string input, string pickedWord)
+        public static void WholeWordGuess(string input, string pickedWord, ref char[] charArray)
         {
             if (input == pickedWord)
             {
-                _correctChars = input.ToCharArray();
+                charArray = input.ToCharArray();
+                return;
             }
+
+            _currentAttempt++;
         }
 
-        private static void PrintCurrentLetters()
+        private static void PrintCurrentStatus(char[] charArray, StringBuilder sb, int int1, int int2)
         {
-            Console.WriteLine(_correctChars);
-            Console.WriteLine($"Wrong Letters: {_wrongLettersBuilder}");
-            Console.WriteLine($"Attempts {_currentAttempt} : {maxAtempts}");
+            Console.WriteLine(charArray);
+            Console.WriteLine($"Wrong Letters: {sb}");
+            Console.WriteLine($"Attempts {int1} : {int2}");
         }
 
         public static bool DetectRepeatInput(string input, char[] correctChars, StringBuilder sb)
