@@ -8,79 +8,54 @@ namespace LexiconAssignment2_Hangman
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     [SuppressMessage("ReSharper", "SuggestVarOrType_BuiltInTypes")]
-    public class Program
+    public static class Program
     {
-        private static string[] _wordlist = {"word","sponge","human","death","borrow","cheat","supercalifragilisticexpialidocious"};
+        private static string[] _wordlist =
+            {"word", "sponge", "human", "death", "borrow", "cheat", "supercalifragilisticexpialidocious"};
+
         private static string _pickedWord;
-        private static StringBuilder _wrongLettersBuilder = new StringBuilder();
         private static char[] _correctChars;
-        private static readonly int MaxAttempts = 10;
+
+        private static StringBuilder _wrongLettersBuilder = new StringBuilder();
+
+        private static int MaxAttempts = 10;
         private static int _currentAttempt;
 
+        private static string _defaultWordlistPath = "wordlist.txt";
         static void Main()
         {
-            // _wordlist = LoadWordlistFromFile("wordlist.txt", _wordlist);
-            _wordlist =  new string[]{"word"};
+            //Set Up
+            _wordlist = LoadWordlistFromFile(_wordlist,_defaultWordlistPath);
             _pickedWord = PickWord(_wordlist).ToUpper();
             _correctChars = FillCharArray(_pickedWord);
-
+            
             Console.WriteLine("I've picked a word, now try to guess it");
-            while ((_currentAttempt < MaxAttempts) ^ CheckWin())
+            
+            // Main game loop
+            while ((_currentAttempt < MaxAttempts) ^ HasWon(_correctChars,_pickedWord))
             {
-                PrintCurrentStatus(_correctChars,_wrongLettersBuilder,_currentAttempt,MaxAttempts);
+                PrintCurrentStatus(_correctChars, _wrongLettersBuilder, _currentAttempt, MaxAttempts);
                 var input = Console.ReadLine()?.ToUpper();
                 ModeSelect(input);
             }
 
-            if (CheckWin())
+            // Game Outcomes
+            
+            //Win
+            if (HasWon(_correctChars,_pickedWord))
             {
                 Console.WriteLine($"Congrats, the word was \"{_pickedWord}\", you won");
                 Console.WriteLine("press any key to exit");
                 Console.ReadKey();
-                
-            } else if (_currentAttempt >= MaxAttempts)
+            }
+            //Lose
+            else if (_currentAttempt >= MaxAttempts)
             {
                 Console.WriteLine($"Sorry, you lost the game ;). the word was: {_pickedWord}");
                 Console.WriteLine("press any key to exit");
                 Console.ReadKey();
             }
         }
-
-        public static string[] LoadWordlistFromFile(string filenamePath, string[] wordlist)
-        {
-            string fullPath = $"{Environment.CurrentDirectory}/{filenamePath}";
-            try
-            {
-                Console.WriteLine($"Loading wordlist from {fullPath}");
-                string fileContents = File.ReadAllText(fullPath);
-                bool hasNewLines = fileContents.Contains("\n");
-                if (fileContents.Contains(','))
-                {
-                    wordlist = fileContents.Split(',');
-                }
-                else if (hasNewLines)
-                {
-                    wordlist = fileContents.Split('\n');
-                }
-
-                // wordlist = File.ReadAllLines(fullPath)[0].Split(',');
-                Console.WriteLine($"Loaded {wordlist.Length} words Successfully");
-                return wordlist;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                Console.WriteLine("Directory not found");
-                return wordlist;
-            }
-            catch (FileNotFoundException)
-            {
-                Console.WriteLine("File not Found, Falling back on internal wordlist");
-                return wordlist;
-            }
-
-
-        }
-
         private static void ModeSelect(string input)
         {
             if (input != null && input.Length > 1)
@@ -101,6 +76,88 @@ namespace LexiconAssignment2_Hangman
             return _pickedWord;
         }
 
+        public static string[] LoadWordlistFromFile(this string[] stringArray, string filePath)
+        {
+            string fullPath;
+            //checking if path to file is relative or not, to make sure the path gets set correctly
+            if (Path.IsPathFullyQualified(filePath))
+            {
+                fullPath = filePath;
+            }
+            else
+            {
+                fullPath = $"{Environment.CurrentDirectory}/{filePath}";
+            }
+
+            try
+            {
+                Console.WriteLine($"Loading wordlist from {fullPath}");
+                string fileContents = File.ReadAllText(fullPath);
+                bool hasNewLines = fileContents.Contains("\n");
+                if (fileContents.Contains(','))
+                {
+                    stringArray = fileContents.Split(',');
+                }
+                else if (hasNewLines)
+                {
+                    stringArray = fileContents.Split('\n');
+                }
+
+                // wordlist = File.ReadAllLines(fullPath)[0].Split(',');
+            }
+            catch (DirectoryNotFoundException exception)
+            {
+                Console.WriteLine($"{exception.Message} \n Falling back on internal wordlist");
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine(
+                    "Can not read File, It's either missing or corrupt, Falling back on internal wordlist");
+            }
+            finally
+            {
+                Console.WriteLine($"Loaded {stringArray.Length} words Successfully");
+            }
+            return stringArray;
+        }
+
+        public static string[] LoadWordlistFromFile(this string[] stringArray, string filePath, char separator)
+        {
+            string fullPath;
+            //checking if path to file is relative or not, to make sure the path gets set correctly
+            if (Path.IsPathFullyQualified(filePath))
+            {
+                fullPath = filePath;
+            }
+            else
+            {
+                fullPath = $"{Environment.CurrentDirectory}/{filePath}";
+            }
+
+            try
+            {
+                Console.WriteLine($"Loading wordlist from {fullPath}");
+                string fileContents = File.ReadAllText(fullPath);
+                stringArray = fileContents.Split(separator);
+
+                // wordlist = File.ReadAllLines(fullPath)[0].Split(',');
+                Console.WriteLine($"Loaded {stringArray.Length} words Successfully");
+                return stringArray;
+            }
+            catch (DirectoryNotFoundException exception)
+            {
+                Console.WriteLine($"{exception.Message} \n Falling back on internal wordlist");
+                return stringArray;
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine(
+                    "Can not read File, It's either missing or corrupt, Falling back on internal wordlist");
+                return stringArray;
+            }
+        }
+
+        
         public static char[] FillCharArray(string pickedWord)
         {
             var outputArray = new char[pickedWord.Length];
@@ -112,16 +169,16 @@ namespace LexiconAssignment2_Hangman
             return outputArray;
         }
 
-        private static bool CheckWin()
+        private static bool HasWon( char[] charArray, string correctWord)
         {
-            if (new string(_correctChars) == _pickedWord)
+            if (new string(charArray) == correctWord)
             {
                 return true;
             }
 
             return false;
         }
-        
+
         public static void SingleCharacterGuess(string input, string pickedWord, char[] correctCharsArray, StringBuilder sb)
         {
             // this is a very hacky way of doing it but it works
@@ -146,7 +203,7 @@ namespace LexiconAssignment2_Hangman
             }
         }
 
-        public static void WholeWordGuess(string input, string pickedWord, ref char[] charArray)
+        private static void WholeWordGuess(string input, string pickedWord, ref char[] charArray)
         {
             if (input == pickedWord)
             {
